@@ -9,7 +9,7 @@ HTTP_STATUS=000
 
 # 1. Wait for the frontend to return 200 OK (Retry loop)
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-  HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000)
+  HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000)
 
   if [ "$HTTP_STATUS" -eq 200 ]; then
     echo "✅ Frontend is up and responding (HTTP 200)"
@@ -28,7 +28,7 @@ if [ "$HTTP_STATUS" -ne 200 ]; then
 fi
 
 # 2. Check if the API is accepting data streams
-API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST -d '[]' -H "Content-Type: application/json" http://localhost:3000/api/sales)
+API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST -d '[]' -H "Content-Type: application/json" http://127.0.0.1:3000/api/sales)
 
 if [ "$API_STATUS" -eq 200 ]; then
   echo "✅ Ingestion API is up and accepting payloads (HTTP 200)"
