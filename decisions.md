@@ -1,18 +1,52 @@
-# Technical Decisions & Architecture
+# Architecture & Design Decisions
 
-## System Architecture Overview
-The application is strictly self-contained and runs 100% locally using Docker Compose. All components—the producer, the API, the frontend, and the database—communicate over a private, isolated Docker network. There are no cloud dependencies, third-party analytics, or external data sharing mechanisms, ensuring complete data privacy and local control.
+This document records the key architectural, technological, and design decisions made throughout the development of the Engine Oil Sales (EOSA) system, distinguishing between human-driven choices and AI-assisted recommendations.
 
-## Decisions Made by Human (Developer)
-*   **Tech Stack Choices:** Selected Python for the producer, Next.js for the unified frontend and backend, React for the UI, and PostgreSQL for persistent storage.
-*   **Charting Library:** Required the use of the specific custom library (`jedzej/canplot`) for the time-series visualization.
-*   **Data Integrity Stance:** Chose to temporarily log and discard malformed data to prioritize application stability and keep the data stream uninterrupted, rather than crashing or pausing the producer.
-*   **Component Architecture:** Instructed that Next.js act as a monolithic full-stack container (handling both API routes and frontend rendering) to reduce infrastructure complexity.
-*   **Communication Protocol:** Chose direct HTTP POST requests between the Python script and the Next.js server to start simple, bypassing message brokers (like Kafka or RabbitMQ) until business requirements demand them.
+---
 
-## Decisions Made by AI (Assistant)
-*   **Validation Layer (Zod):** Introduced Zod on the API route to enforce strict schema validation, providing a clean boundary against the corrupted payloads injected by the producer.
-*   **Database Schema Design (Prisma):** Designed a flat database schema (`SaleEvent`) rather than normalized tables (e.g., separate `Salesman` or `Customer` tables). This optimizes ingestion speed and simplifies SQL grouping for dashboard aggregations.
-*   **Next.js Prisma Singleton Fix:** Implemented a global Prisma client singleton to prevent database connection exhaustion caused by Next.js hot-reloading in the development environment.
-*   **Fault Injection Logic:** Designed the Python producer to randomly corrupt 15% of the data (dropping fields, inserting nulls, changing types) to fulfill the extra points requirement while generating a predictable 30-second loop.
-*   **Dashboard State & Polling:** Implemented standard React `useEffect` polling at a 10-second interval to fetch the latest server-side aggregations, ensuring the UI remains dynamic without complex WebSocket setups.
+## 1. Monorepo Structure with Docker & Docker Compose
+* **Context:** The system consists of an ingestion pipeline (Python producer), a relational database (PostgreSQL), and a full-stack web application/dashboard.
+* **Decision:** Structured the project as a monorepo orchestrated via Docker Compose, separating services into `db`, `producer`, and `dashboard`.
+* **Decision Maker:** **Human** (Initial project setup and infrastructure architecture).
+* **Rationale:**
+    * Eliminates environment discrepancies and simplifies local testing with a single command (`docker compose up --build`).
+    * Cleanly separates infrastructure and service concerns.
+
+---
+
+## 2. Framework Choice for Dashboard & API: Next.js (App Router)
+* **Context:** A unified solution was required to handle backend ingestion endpoints and present a real-time analytics dashboard.
+* **Decision:** Used **Next.js** with the **App Router**, TypeScript, Prisma ORM, and Zod validation.
+* **Decision Maker:** **Human** (Tech stack preference).
+* **Rationale:**
+    * Combines API routes and frontend UI rendering in a single deployable unit.
+    * Ensures end-to-end type safety between database schemas and application components.
+
+---
+
+## 3. High-Performance Visualization: Canvas-based Charting (`canplot`)
+* **Context:** The dashboard needs to render time-series sales metrics smoothly without DOM performance bottlenecks.
+* **Decision:** Selected and integrated **`canplot`** (`@canplot/react`) for canvas-based rendering of line charts, custom tooltips, and crosshairs.
+* **Decision Maker:** **Human** (Selected and proposed the visualization library).
+* **Rationale:**
+    * Avoids heavy DOM/SVG rendering overhead for time-series datasets.
+    * Provides native time scales and high-frequency rendering capabilities.
+
+---
+
+## 4. Real-Time Updates via Server-Sent Events (SSE)
+* **Context:** The dashboard needs to reflect incoming data from the Python producer in real time without heavy polling.
+* **Decision:** Implemented **Server-Sent Events (SSE)** via a persistent streaming endpoint (`/api/dashboard/stream`) to broadcast updates.
+* **Decision Maker:** **Human** (Proposed and initiated the SSE approach).
+* **Rationale:**
+    * Establishes a lightweight, unidirectional persistent connection from the server to the client.
+    * Eliminates unnecessary polling overhead by pushing updates reactively.
+
+---
+
+## 5. Automated Quality Assurance & Testing Suite
+* **Context:** Comprehensive validation was needed across Python components, database schemas, API routes, and React UI components.
+* **Decision:** Implemented a multi-layered test suite featuring Python unit tests, Jest integration/UI tests, and E2E shell orchestration scripts (`run_tests.sh` / `.bat`).
+* **Decision Maker:** **Collaborative** (Human defined the testing requirements and execution flow; AI assisted in debugging configuration issues, Jest module paths, and adding retry loops to health checks).
+* **Rationale:**
+    * Ensures high reliability and automated verification for system evaluation.

@@ -1,41 +1,63 @@
-# Engine Oil Sales Aggregation
+# Engine Oil Sales Analytics (EOSA)
 
-A full-stack, local-only system designed to ingest, store, and visualize a continuous stream of engine oil sales events. The entire infrastructure is containerized to ensure zero data leaves your machine.
+A real-time analytics platform and data ingestion pipeline designed for tracking and monitoring engine oil sales, customer warranties, and salesman performance.
 
-## Features
-*   **Continuous Event Streaming:** A Python producer generating sales data every 30 seconds, including simulated fault injection (malformed data).
-*   **Robust Ingestion API:** A Next.js backend strictly validating incoming data with Zod, smoothly dropping broken payloads without crashing.
-*   **Persistent Storage:** PostgreSQL database using Prisma ORM to ensure all valid sales data survives container restarts.
-*   **Live Dashboard:** A React frontend that polls for aggregated metrics, displaying a sales leaderboard, active alerts for the closest expiring warranty, and a cumulative sales chart using `canplot`.
+## System Architecture
+
+The project is structured as a containerized monorepo orchestrated via Docker Compose, consisting of three core services:
+1. **`db`**: PostgreSQL relational database storing sales events.
+2. **`producer`**: A Python-based service that continuously generates and pushes sales event batches to the backend.
+3. **`dashboard`**: A full-stack Next.js (App Router) application featuring backend API routes for data ingestion/validation (Zod), a real-time analytics dashboard, and Canvas-based time-series charts (`canplot`).
+
+---
 
 ## Prerequisites
-*   [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
 
-## Running the Application
+Ensure you have the following installed on your machine:
+* [Docker & Docker Compose](https://www.docker.com/)
+* [Node.js](https://nodejs.org/) (optional, if running tests locally)
+* [Python 3.x](https://www.python.org/) (optional, if running producer tests locally)
 
-To start the entire infrastructure (Producer, API/Frontend, and Database), run the following command in the root directory:
+---
+
+## Getting Started & Running the Application
+
+1. Clone the repository and navigate to the project root.
+2. Build and start all services using Docker Compose:
+   ```bash
+   docker compose up --build
+   ```
+3. Open your browser and access the real-time dashboard at:
+   👉 http://localhost:3000
+
+
+## Running the Automated Test Suite
+
+The project includes a comprehensive multi-layered testing suite covering Python unit tests, Zod schema validations, Next.js API integration tests, React UI component tests, and an E2E health check script.
+
+To run all tests automatically, execute the test script from the root directory:
+
+On Linux / macOS:
 
 ```bash
-docker compose up --build
+./run_tests.sh
 ```
 
-## Project structure:
+## Project Structure
 
-engine-oil-sales/
-
-├── docker-compose.yml      # Orchestrates all services
-
-├── .env                    # Shared environment variables
-
-├── producer/               # Python generator
-
-│   ├── Dockerfile
-
-│   ├── requirements.txt
-
-│   └── main.py             # Empty for now (will contain the loop)
-
-└── web/                    # Next.js Fullstack (Frontend + API + Prisma)
-
-    └── Dockerfile          # Setup for Node.js
-
+```
+eosa/
+├── dashboard/               # Next.js full-stack dashboard & API service
+│   ├── prisma/              # Database schema & migrations
+│   ├── src/
+│   │   ├── app/             # App Router (API routes, Server-Sent Events stream, dashboard UI)
+│   │   ├── components/      # UI components (Canvas charts, tables)
+│   │   └── lib/             # Shared logic, Prisma client, Zod validation schemas
+│   ├── jest.config.js       # Jest configuration for unit & integration tests
+│   └── jest.setup.ts        # Testing library setup
+├── producer/                # Python data producer service & unit tests
+├── docker-compose.yml       # Central infrastructure orchestration
+├── run_tests.sh             # Automated test script for Linux/macOS
+├── run_tests.bat            # Automated test script for Windows
+└── decisions.md             # Architecture & design decisions record
+```

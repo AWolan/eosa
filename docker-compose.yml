@@ -19,10 +19,10 @@ services:
       timeout: 5s
       retries: 5
 
-  web:
+  dashboard:
     build: 
-      context: ./web
-    container_name: sales_web
+      context: ./dashboard
+    container_name: sales_dashboard
     restart: always
     ports:
       - "3000:3000"
@@ -33,7 +33,7 @@ services:
         condition: service_healthy
     volumes:
       # Mount the local web directory to allow hot-reloading during development
-      - ./web:/app
+      - ./dashboard:/app
       - /app/node_modules
       - /app/.next
     command: sh -c "npm install && npx prisma db push && npm run build && npm start"
@@ -44,9 +44,9 @@ services:
     container_name: sales_producer
     restart: always
     environment:
-      - API_URL=http://web:3000/api/sales
+      - API_URL=http://dashboard:3000/api/sales
     depends_on:
-      - web
+      - dashboard
     volumes:
       # Mount local producer folder for instant script updates
       - ./producer:/app

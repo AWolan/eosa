@@ -6,7 +6,7 @@ from faker import Faker
 from datetime import datetime, timezone
 
 # Ensure we hit the Next.js API route we will build next
-API_URL = os.getenv("API_URL", "http://web:3000/api/sales")
+API_URL = os.getenv("API_URL", "http://dashboard:3000/api/sales")
 fake = Faker()
 
 # A fixed list of salesmen to make the dashboard grouping more realistic
@@ -68,7 +68,7 @@ def generate_batch():
 def main():
     print(f"Producer starting. Target API: {API_URL}")
 
-    # Brief pause to let the web container and database boot up first
+    # Brief pause to let the dashboard container and database boot up first
     time.sleep(5)
 
     while True:

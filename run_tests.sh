@@ -9,9 +9,9 @@ echo "======================================="
 docker compose exec producer python -m unittest test_main.py
 
 echo -e "\n======================================="
-echo "2. Running Web Tests (Next.js/React)"
+echo "2. Running Dashboard Tests (Next.js/React)"
 echo "======================================="
-docker compose exec web npx jest
+docker compose exec dashboard npx jest
 
 echo -e "\n======================================="
 echo "3. Running E2E Healthcheck"
