@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+/**
+ * DEPRECATED: it was used to get data on demand but now it is moved to Server-Send Events at /api/dashboard/stream
+ * @constructor
+ */
 export async function GET() {
   try {
     // Fetch all events, sorted chronologically for cumulative calculations

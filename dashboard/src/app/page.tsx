@@ -24,31 +24,9 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [hiddenSalesmen, setHiddenSalesmen] = useState<Set<string>>(new Set());
 
-  // const fetchData = async () => {
-  //   try {
-  //     const res = await fetch("/api/dashboard");
-  //     const data = await res.json();
-  //     if (data) {
-  //       setLeaderboard(data.leaderboard || []);
-  //       setClosestWarranty(data.closestWarranty || null);
-  //       setChartData(data.chartData || []);
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to fetch dashboard data", error);
-  //   }
-  // };
-  //
-  // useEffect(() => {
-  //   fetchData();
-  //   const interval = setInterval(fetchData, 10000);
-  //   return () => clearInterval(interval);
-  // }, [fetchData]);
-
   useEffect(() => {
-    // Otwieramy stały strumień SSE do naszego nowego endpointu
     const eventSource = new EventSource("/api/dashboard/stream");
 
-    // Gdy serwer wyśle nową paczkę danych, automatycznie aktualizujemy stan UI
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
