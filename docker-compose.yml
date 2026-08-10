@@ -36,6 +36,7 @@ services:
       - ./web:/app
       - /app/node_modules
       - /app/.next
+    command: sh -c "npm install && npx prisma db push && npm run build && npm start"
 
   producer:
     build:
