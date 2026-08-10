@@ -1,0 +1,22 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SaleEvent {
+  id                    String   @id @default(uuid())
+  sellDate              DateTime
+  amountLitres          Float
+  pricePerLitre         Float
+  customerCompany       String
+  salesmanName          String
+  warrantyType          String   // "mileage" or "time"
+  warrantyPeriodDays    Int
+  expectedYearlyMileage Int?     // Nullable, as it only applies to "mileage" warranty
+  createdAt             DateTime @default(now()) // Tracks when we received the event
+}
