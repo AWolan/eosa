@@ -2,31 +2,36 @@ import prisma from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-async function getDashboardData() {
-  const sales = await prisma.saleEvent.findMany({
+// --- Helper Methods ---
+
+async function fetchRecentSales() {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  return await prisma.saleEvent.findMany({
+    where: { sellDate: { gte: thirtyDaysAgo } },
     orderBy: { sellDate: 'asc' },
   });
+}
 
-  if (sales.length === 0) {
-    return { leaderboard: [], closestWarranty: null, chartData: [] };
-  }
-
+function calculateLeaderboard(sales: any[]) {
   const totals: Record<string, number> = {};
   sales.forEach((sale) => {
     totals[sale.salesmanName] = (totals[sale.salesmanName] || 0) + sale.amountLitres;
   });
 
-  const leaderboard = Object.entries(totals)
+  return Object.entries(totals)
     .map(([name, total]) => ({ name, total }))
     .sort((a, b) => b.total - a.total);
+}
 
+function findClosestWarranty(sales: any[]) {
   const now = new Date();
   let closest: any = null;
   let minDays = Infinity;
 
   sales.forEach((sale) => {
-    const saleDate = new Date(sale.sellDate);
-    const expirationDate = new Date(saleDate);
+    const expirationDate = new Date(sale.sellDate);
     expirationDate.setDate(expirationDate.getDate() + sale.warrantyPeriodDays);
 
     const diffTime = expirationDate.getTime() - now.getTime();
@@ -44,8 +49,12 @@ async function getDashboardData() {
     }
   });
 
+  return closest;
+}
+
+function generateChartData(sales: any[]) {
   const cumulativeTotals: Record<string, number> = {};
-  const chartData = sales.map((sale) => {
+  return sales.map((sale) => {
     cumulativeTotals[sale.salesmanName] = (cumulativeTotals[sale.salesmanName] || 0) + sale.amountLitres;
     return {
       date: sale.sellDate,
@@ -54,13 +63,28 @@ async function getDashboardData() {
       annotation: `Sold ${sale.amountLitres}L to ${sale.customerCompany}`,
     };
   });
-
-  return { leaderboard, closestWarranty: closest, chartData };
 }
+
+// --- Main Pipeline ---
+
+async function getDashboardData() {
+  const sales = await fetchRecentSales();
+
+  if (sales.length === 0) {
+    return { leaderboard: [], closestWarranty: null, chartData: [] };
+  }
+
+  return {
+    leaderboard: calculateLeaderboard(sales),
+    closestWarranty: findClosestWarranty(sales),
+    chartData: generateChartData(sales)
+  };
+}
+
+// --- Stream Handler ---
 
 export async function GET(request: Request) {
   const encoder = new TextEncoder();
-
   const customStream = new ReadableStream({
     async start(controller) {
       let lastSignature = '';
@@ -78,16 +102,14 @@ export async function GET(request: Request) {
           if (currentSignature !== lastSignature) {
             lastSignature = currentSignature;
             const data = await getDashboardData();
-
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
           }
         } catch (error) {
-          console.error('SSE Stream error:', error);
+          console.error('SSE check failed:', error);
         }
       };
 
       await checkAndPush();
-
       const interval = setInterval(checkAndPush, 2000);
 
       request.signal.addEventListener('abort', () => {

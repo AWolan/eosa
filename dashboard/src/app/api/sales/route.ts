@@ -3,7 +3,15 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'; // Using the alias we set up during create-next-app
 import { batchSchema } from '@/lib/schema'; // Using the alias we set up during create-next-app
 
+const API_KEY = process.env.INGESTION_API_KEY || 'secret-eosa-key-2026';
+
 export async function POST(request: Request) {
+  // 1. Security Check
+  const apiKey = request.headers.get('x-api-key');
+  if (apiKey !== API_KEY) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
 

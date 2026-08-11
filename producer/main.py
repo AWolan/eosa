@@ -65,6 +65,23 @@ def generate_batch():
 
     return batch
 
+def send_batch_with_retries(batch, max_retries=5):
+    headers = {"Content-Type": "application/json", "x-api-key": "secret-eosa-key-2026"}
+
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(API_URL, json=batch, headers=headers, timeout=5)
+            response.raise_for_status()
+            print(f"✅ Successfully sent {len(batch)} records.")
+            return True
+        except requests.exceptions.RequestException as e:
+            wait_time = 2 ** attempt  # 1s, 2s, 4s, 8s...
+            print(f"⚠️ API connection failed. Retrying in {wait_time}s... (Attempt {attempt + 1}/{max_retries})")
+            time.sleep(wait_time)
+
+    print("❌ Max retries reached. Batch dropped.")
+    return False
+
 def main():
     print(f"Producer starting. Target API: {API_URL}")
 
@@ -75,12 +92,7 @@ def main():
         batch = generate_batch()
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Emitting batch of {len(batch)} events...")
 
-        try:
-            # Send the batch as a JSON array
-            response = requests.post(API_URL, json=batch, timeout=5)
-            print(f"Server responded: HTTP {response.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"Failed to send data (Server might be down): {e}")
+        send_batch_with_retries(batch)
 
         # Requirement: Emit every 30 seconds
         time.sleep(30)
