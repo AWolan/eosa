@@ -1,4 +1,10 @@
-export default function Header({ status }: { status: 'connected' | 'reconnecting' | 'disconnected' }) {
+import {ConnectionStatus} from "@/common/common.types";
+
+type HeaderProps = {
+  status: ConnectionStatus;
+};
+
+export default function Header({ status }: HeaderProps) {
   const statusConfig = {
     connected: { color: 'bg-green-500', text: 'Live' },
     reconnecting: { color: 'bg-yellow-500', text: 'Reconnecting...' },

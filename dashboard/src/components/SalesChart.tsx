@@ -6,7 +6,8 @@ import {
   LinePlot,
   ChartAreaInteractions,
   Crosshair,
-  TooltipsX
+  TooltipsX,
+  AxisOverlay,
 } from "@canplot/react";
 
 export interface ChartDataPoint {
@@ -134,6 +135,9 @@ export default function SalesChart({ data }: SalesChartProps) {
               scales: chartConfig.scales,
             }}
           >
+            <AxisOverlay scaleId="x">Event time</AxisOverlay>
+            <AxisOverlay scaleId="y">Total volume</AxisOverlay>
+
             {chartConfig.series.map((series) => (
               <LinePlot
                 key={series.name}

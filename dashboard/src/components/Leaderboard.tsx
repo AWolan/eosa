@@ -1,4 +1,10 @@
-export default function Leaderboard({ data }: { data: any[] }) {
+import {LeaderboardEntry} from "@/common/common.types";
+
+type LeaderboardProps = {
+  data: LeaderboardEntry[];
+}
+
+export default function Leaderboard({ data }: LeaderboardProps) {
   if (data.length === 0) {
     return (
       <div className="col-span-2 bg-white rounded-xl shadow p-6 flex items-center justify-center">

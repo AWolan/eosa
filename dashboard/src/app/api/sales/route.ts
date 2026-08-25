@@ -5,6 +5,26 @@ import { batchSchema } from '@/lib/schema'; // Using the alias we set up during 
 
 const API_KEY = process.env.INGESTION_API_KEY || 'secret-eosa-key-2026';
 
+type MillageWarrantyEvent = {
+  sellDate: string;
+  amountLitres: number;
+  pricePerLitre: number;
+  customerCompany: string;
+  salesmanName: string;
+  warrantyType: 'millage';
+}
+type TimeWarrantyEvent = {
+  sellDate: Date;
+  amountLitres: number;
+  pricePerLitre: number;
+  customerCompany: string;
+  salesmanName: string;
+  warrantyType: 'time';
+  warrantyPeriodDays: number;
+}
+
+type SaleEvent = MillageWarrantyEvent | TimeWarrantyEvent;
+
 export async function POST(request: Request) {
   // 1. Security Check
   const apiKey = request.headers.get('x-api-key');

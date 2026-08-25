@@ -1,4 +1,10 @@
-export default function WarrantyAlert({ warranty }: { warranty: any }) {
+import {Warranty} from "@/common/common.types";
+
+type WarrantyAlertProps = {
+  warranty: Warranty | null;
+}
+
+export default function WarrantyAlert({ warranty }: WarrantyAlertProps) {
   return (
     <div className="col-span-1 bg-red-50 rounded-xl shadow p-6 border border-red-100 flex flex-col justify-center">
       <h2 className="text-xl font-semibold mb-2 text-red-700">Critical Alert</h2>

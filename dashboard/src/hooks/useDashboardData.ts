@@ -1,10 +1,18 @@
-import { useState, useEffect } from "react";
+import {useEffect, useState} from "react";
+import {ChartDataPoint, ConnectionStatus, LeaderboardEntry, Warranty} from "@/common/common.types";
 
-export function useDashboardData() {
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [closestWarranty, setClosestWarranty] = useState<any>(null);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'reconnecting' | 'disconnected'>('disconnected');
+export type UseDashboardDataResult = {
+  leaderboard: LeaderboardEntry[];
+  closestWarranty: Warranty | null;
+  chartData: ChartDataPoint[];
+  connectionStatus: ConnectionStatus;
+}
+
+export function useDashboardData(): UseDashboardDataResult {
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [closestWarranty, setClosestWarranty] = useState<Warranty | null>(null);
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(ConnectionStatus.Disconnected);
 
   useEffect(() => {
     // 1. Initialize the Server-Sent Events stream
@@ -12,7 +20,7 @@ export function useDashboardData() {
 
     // 2. Handle connection opened
     eventSource.onopen = () => {
-      setConnectionStatus('connected');
+      setConnectionStatus(ConnectionStatus.Connected);
     };
 
     // 3. Handle incoming data payloads
@@ -29,7 +37,7 @@ export function useDashboardData() {
 
     // 4. Handle connection drops / reconnections
     eventSource.onerror = () => {
-      setConnectionStatus('reconnecting');
+      setConnectionStatus(ConnectionStatus.Reconnecting);
     };
 
     // 5. Cleanup on unmount
